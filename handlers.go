@@ -24,26 +24,9 @@ func makeMessage(cmd string) interface{} {
 	return message
 }
 
-func getKey() (string, error) {
-    b, err := ioutil.ReadFile("key.txt")
-    if err != nil {
-        return "", errors.New("Error reading key file")
-    }
-
-    str := string(b)
-    return str, nil
-}
-
 func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
-    authKey := r.Header.Get("auth_key")
-    key, key_err := getKey()
-    
-    if key_err != nil {
-        http.Error(w, "An error has occurred", http.StatusInternalServerError)
-        return
-    }
-    
-    if authKey != key {
+    key := r.Header.Get("auth_key")
+    if AuthKey != key {
         http.Error(w, "An error has occurred", http.StatusInternalServerError)
         return
     }
@@ -95,15 +78,8 @@ func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func StreamsPostHandler(w http.ResponseWriter, r *http.Request) {
-    authKey := r.Header.Get("auth_key")
-    key, key_err := getKey()
-    
-    if key_err != nil {
-        http.Error(w, "An error has occurred", http.StatusInternalServerError)
-        return
-    }
-    
-    if authKey != key {
+    key := r.Header.Get("auth_key")
+    if AuthKey != key {
         http.Error(w, "An error has occurred", http.StatusInternalServerError)
         return
     }

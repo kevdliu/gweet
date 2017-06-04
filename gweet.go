@@ -14,6 +14,17 @@ import (
 
 const MaxQueueLength = 3
 const ItemLifetime = 5 * time.Minute
+var AuthKey string
+
+func getKey() (string, error) {
+    b, err := ioutil.ReadFile("key.txt")
+    if err != nil {
+        return "", errors.New("Error reading key file")
+    }
+
+    str := string(b)
+    return str, nil
+}
 
 func main() {
 	var debug_enabled = flag.Bool("debug", false, "Enable debug logging")
@@ -25,6 +36,20 @@ func main() {
 	} else {
 		InitLogging(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 	}
+    
+    key, key_err := getKey()
+    
+    if key_err != nil {
+        INFO.Println("ERROR reading authorization key from key file")
+        return
+    }
+    
+    if key == "" {
+        INFO.Println("ERROR authorization key is empty")
+        return
+    }
+    
+    AuthKey = key
 
 	r := mux.NewRouter()
 	r.HandleFunc("/relay/", StreamsStreamingGetHandler).Methods("GET").Queries("streaming", "1")
