@@ -1,6 +1,7 @@
 package main
 
 import (
+    "errors"
 	"flag"
 	"io/ioutil"
 	"log"
