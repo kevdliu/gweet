@@ -2,7 +2,9 @@ package main
 
 import (
     "encoding/json"
+    "errors"
 	"fmt"
+    "io/ioutil"
 	"net/http"
 	"time"
 
@@ -11,28 +13,49 @@ import (
 
 type Bundle struct {
     Cmd string
-    Key string
 }
 
-var c = cache.New(ItemLifetime, 5*time.Minute)
+var c = cache.New(ItemLifetime, ItemLifetime * 2)
 
-func makeMessage(key string, cmd string) interface{} {
+func makeMessage(cmd string) interface{} {
 	message := make(map[string]interface{})
-	message["key"] = key
 	message["cmd"] = cmd
 	message["created"] = time.Now().Format(time.RFC3339Nano)
 	return message
 }
 
+func getKey() (string, error) {
+    b, err := ioutil.ReadFile("key.txt")
+    if err != nil {
+        return "", errors.New("Error reading key file")
+    }
+
+    str := string(b)
+    return str, nil
+}
+
 func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
+    authKey := r.Header.Get("auth_key")
+    key, key_err := getKey()
+    
+    if key_err != nil {
+        http.Error(w, "An error has occurred", http.StatusInternalServerError)
+        return
+    }
+    
+    if authKey != key {
+        http.Error(w, "An error has occurred", http.StatusInternalServerError)
+        return
+    }
+    
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		http.Error(w, "Webserver doesn't support hijacking.", http.StatusInternalServerError)
+		http.Error(w, "An error has occurred", http.StatusInternalServerError)
 		return
 	}
 	conn, bufrw, err := hj.Hijack()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "An error has occurred", http.StatusInternalServerError)
 		return
 	}
 
@@ -44,18 +67,9 @@ func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(bufrw, "Transfer-Encoding: chunked\r\n")
 	fmt.Fprintf(bufrw, "Content-Type: application/json\r\n\r\n")
 	bufrw.Flush()
-
-	decoder := json.NewDecoder(r.Body)
-    var b Bundle
-	j_err := decoder.Decode(&b)
-
-	if j_err != nil {
-		http.Error(w, j_err.Error(), http.StatusInternalServerError)
-        return
-	}
     
-	messageBus := TopicMap.Register(b.Key)
-	defer TopicMap.Unregister(b.Key, messageBus)
+	messageBus := TopicMap.Register(key)
+	defer TopicMap.Unregister(key, messageBus)
 
 	// Keepalive ticker
 	ticker := time.Tick(30 * time.Second)
@@ -81,19 +95,32 @@ func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func StreamsPostHandler(w http.ResponseWriter, r *http.Request) {
+    authKey := r.Header.Get("auth_key")
+    key, key_err := getKey()
+    
+    if key_err != nil {
+        http.Error(w, "An error has occurred", http.StatusInternalServerError)
+        return
+    }
+    
+    if authKey != key {
+        http.Error(w, "An error has occurred", http.StatusInternalServerError)
+        return
+    }
+
 	decoder := json.NewDecoder(r.Body)
     var b Bundle
 	err := decoder.Decode(&b)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "An error has occurred", http.StatusInternalServerError)
         return
 	}
-
-	message := makeMessage(b.Key, b.Cmd)
+    
+	message := makeMessage(b.Cmd)
 
 	// Write the message to the cache.
-	CacheBus <- CacheMessage{1, message, b.Key}
+	CacheBus <- CacheMessage{1, message, key}
 
 	fmt.Fprint(w, "RCVD")
 }

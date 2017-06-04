@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/pmylund/go-cache"
 )
 
@@ -19,7 +17,7 @@ func Cacher() {
 	// A cache manager that communicates reads and
 	// writes through a channel, so they are atomic.
 	var messages []interface{}
-	c := cache.New(ItemLifetime, 5*time.Minute)
+	c := cache.New(ItemLifetime, ItemLifetime * 2)
 
 	for busMessage := range CacheBus {
 		value, found := c.Get(busMessage.key)

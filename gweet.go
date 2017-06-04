@@ -13,7 +13,7 @@ import (
 )
 
 const MaxQueueLength = 3
-const ItemLifetime = 15 * time.Minute
+const ItemLifetime = 5 * time.Minute
 
 func main() {
 	var debug_enabled = flag.Bool("debug", false, "Enable debug logging")
