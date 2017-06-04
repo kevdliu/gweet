@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+    "os"
 
 	"github.com/pmylund/go-cache"
 )
@@ -24,7 +25,7 @@ func makeMessage(cmd string) interface{} {
 
 func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
     key := r.Header.Get("auth_key")
-    if AuthKey != key {
+    if os.Getenv("AUTH_KEY") != key {
         http.Error(w, "An error has occurred", http.StatusInternalServerError)
         return
     }
@@ -77,7 +78,7 @@ func StreamsStreamingGetHandler(w http.ResponseWriter, r *http.Request) {
 
 func StreamsPostHandler(w http.ResponseWriter, r *http.Request) {
     key := r.Header.Get("auth_key")
-    if AuthKey != key {
+    if os.Getenv("AUTH_KEY") != key {
         http.Error(w, "An error has occurred", http.StatusInternalServerError)
         return
     }
