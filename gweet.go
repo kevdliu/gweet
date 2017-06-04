@@ -4,6 +4,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+    // "strconv"
 	"net/http"
 	"os"
 	"time"
@@ -11,8 +12,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const MaxQueueLength = 100
-const ItemLifetime = 5 * 24 * time.Hour
+const MaxQueueLength = 3
+const ItemLifetime = 15 * time.Minute
 
 func main() {
 	var debug_enabled = flag.Bool("debug", false, "Enable debug logging")
@@ -26,13 +27,11 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", HomeHandler)
-	r.HandleFunc("/stream/{key}/", StreamsStreamingGetHandler).Methods("GET").Queries("streaming", "1")
-	r.HandleFunc("/stream/{key}/", StreamsGetHandler).Methods("GET")
-	r.HandleFunc("/stream/{key}/", StreamsPostHandler).Methods("POST")
-	r.HandleFunc("/push/{key}/", PushHandler).Methods("POST")
+	r.HandleFunc("/relay/", StreamsStreamingGetHandler).Methods("GET").Queries("streaming", "1")
+	r.HandleFunc("/relay/", StreamsPostHandler).Methods("POST")
 
 	go Cacher()
 	INFO.Println("Listening...")
 	log.Fatal(http.ListenAndServe(":" + os.Getenv("PORT"), Log(r)))
+    // log.Fatal(http.ListenAndServe(*intf+":"+strconv.Itoa(*port), Log(r)))
 }
