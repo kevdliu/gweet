@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/kevdliu/gweet",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.4.0-10-g18fca31",
+			"Rev": "18fca31550181693b3a834a15b74b564b3605876"
+		},
+		{
+			"ImportPath": "github.com/pmylund/go-cache",
+			"Comment": "v2.0.0-9-g7ac1518",
+			"Rev": "7ac151875ffb48b9f3ccce9ea20f020b0c1596c8"
+		},
+		{
+			"ImportPath": "github.com/tv42/topic",
+			"Rev": "aa72cbe81b4823f349da47a4d749cdda61677c09"
+		}
+	]
+}
